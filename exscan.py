@@ -182,6 +182,7 @@ def parse_exploits():
                         exploitdb_map[cve] = []
 
                     exploitdb_map[cve].append(fields[0])
+
     else:
         info('Using {bred}ExploitDB{rst} links from CVE references.')
 
@@ -203,6 +204,7 @@ def parse_exploits():
 
                 secfocus_names[fields[0]] = fields[1] if len(fields) > 1 else None
                 secfocus_map.add(fields[0])
+
     else:
         info('Using {bred}SecurityFocus{rst} links from CVE references.')
 
@@ -277,7 +279,7 @@ def parse_cve_items(exploits):
         metasploit_names,
         metasploit_map,
         l337day_names,
-        l337day_map,
+        l337day_map
     ) = exploits
 
     vulns = []
@@ -432,7 +434,7 @@ def parse_cve_items(exploits):
     return vulns
 
 
-def create_vulndb(names, aliases, vulns):
+def create_db(names, aliases, vulns):
     info('Initiating SQLite creation...')
 
     if os.path.isfile('db'):
@@ -441,7 +443,6 @@ def create_vulndb(names, aliases, vulns):
     conn = sqlite3.connect('db')
 
     c = conn.cursor()
-
     c.execute('create table vulns (id integer primary key autoincrement, cve text, date datetime, description text, availability char(1), vendor text)')
     c.execute('create table affected (vuln_id integer not null, cpe text, foreign key(vuln_id) references vulns(id))')
     c.execute('create table aliases (class int, cpe text)')
@@ -511,7 +512,7 @@ def create_vulndb(names, aliases, vulns):
     info('Finished database creation.')
 
 
-def update_database():
+def update_db():
     download_nvd_dbs()
 
     names = parse_cpe_names()
@@ -519,7 +520,7 @@ def update_database():
     exploits = parse_exploits()
     vulns = parse_cve_items(exploits)
 
-    create_vulndb(names, aliases, vulns)
+    create_db(names, aliases, vulns)
 
 
 def fuzzy_find_cpe(name, version=None):
@@ -571,13 +572,6 @@ def get_cpe_aliases(cpe):
             alias += ':' + version
 
         aliases.append(alias)
-
-    if verbose:
-        if aliases:
-            error('Resolved aliases: {byellow}cpe:/' + '{rst}, {byellow}cpe:/'.join(aliases) + '{rst}.')
-
-        else:
-            error('No known aliases.')
 
     return aliases
 
@@ -742,7 +736,7 @@ def exscan(host):
             msg = 'Service {bgreen}{host.address}{rst}:{bgreen}{service.port}{rst}/{bgreen}{service.protocol}{rst}'
 
             if service.service_dict.get('cpelist'):
-                info(f'{msg} is {byellow}' + '{rst}, {byellow}'.join(service.service_dict['cpelist']) + '{rst}')
+                info(msg + ' is {byellow}' + '{rst}, {byellow}'.join(service.service_dict['cpelist']) + '{rst}')
 
                 for cpe in service.service_dict['cpelist']:
                     get_vulns_cli(cpe)
@@ -750,7 +744,7 @@ def exscan(host):
             elif service.service_dict.get('product'):
                 product = service.service_dict.get('product', '')
                 version = service.service_dict.get('version', '')
-                service.service_dict.get('extrainfo', '')
+                extrainfo = service.service_dict.get('extrainfo', '')
 
                 full = f'{product} {version} {extrainfo}'.strip()
 
@@ -765,11 +759,11 @@ def exscan(host):
                     get_vulns_cli(cpe)
 
             else:
-                warn(f'{msg} was not identified.')
+                warn(f'{msg} wasnt identified.')
 
 
 if not os.path.isfile('db'):
-    update_database()
+    update_db()
 
 conn = sqlite3.connect('db')
 

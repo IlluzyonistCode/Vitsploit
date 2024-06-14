@@ -6,7 +6,7 @@ import os
 import argparse
 from lxml import etree
 from dotenv import dotenv_values
-from printer import info, warn, error, fail
+from printer import info, warn, error, fails
 
 config = dotenv_values('.env')
 
